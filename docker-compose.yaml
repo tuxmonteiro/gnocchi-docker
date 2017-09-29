@@ -1,0 +1,48 @@
+version: "3"
+
+services:
+  indexer:
+    image: postgres
+
+  storage:
+    image: redis
+
+  gnocchi-api:
+    image: tuxmonteiro/gnocchi
+    environment:
+      POSTGRESQL_USER: postgres
+      POSTGRESQL_SERVICE_HOST: indexer
+      POSTGRESQL_SERVICE_PORT: 5432
+      POSTGRESQL_DATABASE: postgres
+      REDIS_SERVICE_HOST: storage
+      REDIS_SERVICE_PORT: 6379
+
+    ports:
+      - "8041:8041"
+      - "8125:8125/udp"
+    depends_on:
+      - indexer
+      - storage
+    volumes:
+      - metrics-volume:/var/lib/gnocchi
+
+  grafana:
+    image: tuxmonteiro/grafana
+    environment:
+      - GNOCCHI_RATE_SUPPORT
+      - GRAFANA_PLUGIN_URL
+      # - GF_INSTALL_PLUGINS=gnocchixyz-gnocchi-datasource
+      - GF_SECURITY_ADMIN_PASSWORD=password
+      - GF_GNOCCHI_ENDPOINT=http://gnocchi-api:8041
+    ports:
+      - "3000:3000"
+    depends_on:
+      - gnocchi-api
+    links:
+      - "gnocchi-api:gnocchi-api"
+    volumes:
+      - grafana-volume:/var/lib/grafana
+
+volumes:
+  metrics-volume:
+  grafana-volume:

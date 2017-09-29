@@ -10,4 +10,5 @@ RUN mkdir /etc/gnocchi
 RUN chmod 777 /etc/gnocchi
 ADD uwsgi.ini /etc/gnocchi
 EXPOSE 8041
+EXPOSE 8125/udp
 CMD /run-gnocchi.sh
